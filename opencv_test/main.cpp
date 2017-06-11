@@ -58,13 +58,14 @@ Vec4i getLongestLine(Mat nomer)
 
 int main() {
 
-	int noalign =0;
+	int noAlign =0;
+	int noNumber = 0;
 	cv::CascadeClassifier plateCascade;
 	plateCascade.load(cascade_Path);
 
 
 
-	path pathToPhotos = "C:\\data\\train\\21099 croped";//"F:\\Priora\\Bad croped croped";//"C:\\curs\\Test"; //"C:\\CarModel\\поло";// "C:\\curs\\Test"; 
+	path pathToPhotos = "C:\\data\\validation\\logan croped";//"F:\\Priora\\Bad croped croped";//"C:\\curs\\Test"; //"C:\\CarModel\\поло";// "C:\\curs\\Test"; 
 	string cur, next;
 	for(directory_iterator it(pathToPhotos); it != directory_iterator(); ++it)
 	{
@@ -91,7 +92,7 @@ int main() {
 			cv::Rect morda = cv::Rect(p.x, p.y, p.width, p.height);
 			//rectangle(src, morda, cv::Scalar(0,0,255), 2);	
 
-		
+
 
 		}
 
@@ -106,24 +107,20 @@ int main() {
 
 			Vec4i line = getLongestLine(nomer);
 
+			float x0,x1,y0,y1;
 			if(line != Vec4i::zeros())
 			{
 
-				float x0 = line[0];
-				float y0 = line[1];
-				float x1 = line[2];
-				float y1 = line[3];
+				x0 = line[0];
+				y0 = line[1];
+				x1 = line[2];
+				y1 = line[3];
 
 				//матрица вращения вокруг середины самого длинного отрезка
 
 				Point2f center((x0 + x1) / 2 + symbols[0].x, (y0 + y1) / 2 + symbols[0].y);
 				Mat rotMat = getRotationMatrix2D(center, atan((y1-y0)/(x1-x0)) * 180 / 3.1416, 1);
 				warpAffine( src, src, rotMat, src.size() );
-
-				//rectangle(src, // nomer, cv::Scalar(0,0,255), 2);	
-				Point pt1(symbols[0].x,symbols[0].y);
-				Point pt2(symbols[0].x + symbols[0].width,symbols[0].y + symbols[0].height);
-				rectangle(src,pt1,pt2,(0,0,0),-3);
 
 				//int lenNumber = symbols[0].
 				//cv::Rect morda = cv::Rect(center.x - symbols[0].width * 0.9, center.y - symbols[0].height * 1.5, symbols[0].width * 2.4, symbols[0].height * 3);
@@ -144,19 +141,17 @@ int main() {
 				y0 = std::min(y0, (float)src.rows);
 				y1 = std::min(y1, (float)src.rows);
 
-				roi = src(Range(y0, y1), Range(x0, x1));
-				
 			}
 			else
 			{
 				//symbols[0].x
 				cout<<"no align"<<endl;
-				noalign++;
- 
-				float y0 = symbols[0].y - symbols[0].height * 1.5;
-				float y1 = symbols[0].y + symbols[0].height * 1.5;
-				float x0 = symbols[0].x - symbols[0].width * 0.9;
-				float x1 = symbols[0].x + symbols[0].width * 1.9;
+				noAlign++;
+
+				y0 = symbols[0].y - symbols[0].height * 1.5;
+				y1 = symbols[0].y + symbols[0].height * 1.5;
+				x0 = symbols[0].x - symbols[0].width * 0.9;
+				x1 = symbols[0].x + symbols[0].width * 1.9;
 
 				x0 = std::max(x0, (float)0);
 				x1 = std::max(x1, (float)0);
@@ -167,18 +162,24 @@ int main() {
 				x1 = std::min(x1, (float)src.cols);
 				y0 = std::min(y0, (float)src.rows);
 				y1 = std::min(y1, (float)src.rows);
-				roi = src(Range(y0, y1), Range(x0, x1));
+				
 			}
 
-			cvtColor( roi, roi, COLOR_BGR2GRAY );
-			//roi = src(Range(center.y - symbols[0].height * 1.5, center.y + symbols[0].height * 1.5), Range(center.x - symbols[0].width * 0.9, center.x + symbols[0].width * 1.5));
+			Point pt1(symbols[0].x,symbols[0].y);
+			Point pt2(symbols[0].x + symbols[0].width,symbols[0].y + symbols[0].height);
+			rectangle(src,pt1,pt2,(0,0,0),-3);
 
+
+			roi = src(Range(y0, y1), Range(x0, x1));
+			cvtColor( roi, roi, COLOR_BGR2GRAY );
 			/*cv::imshow("mat", roi);
 			cv::waitKey();*/
 		}
+		else
+			noNumber++;
 
 		//adaptiveThreshold(roi,roi,100,ADAPTIVE_THRESH_MEAN_C ,THRESH_BINARY,3,1);
-		
+
 		GaussianBlur( roi, roi, Size(3,3) , 1.6 ); 
 		//adaptiveThreshold(roi, roi, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY, 3, 0);
 		Canny(roi, roi, 10, 60 );
@@ -191,12 +192,13 @@ int main() {
 			Point( erosion_size, erosion_size ) );
 		dilate(roi,roi,element2);
 
-		cv::imwrite("C:\\data3\\" + it->path().string(),roi);
+		cv::imwrite("C:\\data3\\validation\\logan\\" + it->path().string(),roi);
 
 		/*cv::imshow("mat", roi);
 		cv::waitKey();*/
-		cout<<endl<< noalign<<endl;
+		
 	}
-
+	cout<<endl<< noNumber<<endl;
+		cout<<endl<< noAlign<<endl;
 	return 0;
 }
